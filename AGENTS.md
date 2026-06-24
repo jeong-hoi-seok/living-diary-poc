@@ -33,5 +33,6 @@ wiki_root: /Users/hoi-seok/project/llm-wiki/wiki
 - 필수 학습 범위는 `컨벤션`, `개발원칙`, `아키텍처` 폴더다.
 - 이 프로젝트는 RN + Expo 앱이므로 `기술개념/app` 폴더를 우선한다.
 - FSD, Biome, NativeWind 관련 작업이면 위키의 관련 문서를 먼저 읽고 따른다.
-- 프로젝트 로컬 `docs/` 또는 `wiki/`가 생기면 공유 위키보다 프로젝트 로컬 문서를 우선한다.
+- 프로젝트 로컬 맥락 문서는 `docs/wiki/`와 `docs/raw/`에 둔다.
+- 프로젝트 로컬 `docs/wiki/`가 생기면 공유 위키보다 프로젝트 로컬 문서를 우선한다.
 - 위키에 이미 있는 규칙과 설명을 `AGENTS.md`에 중복 작성하지 않는다.
