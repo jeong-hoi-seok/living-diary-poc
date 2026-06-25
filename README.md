@@ -20,13 +20,25 @@ Expo(React Native) 앱. 메인 화면에 Blender에서 만든 3D 태양계(`univ
 
 ## 실행
 
+이 앱은 wgpu 네이티브 모듈을 쓰므로 **Expo Go가 아닌 dev client**가 필요하다.
+(WebGPU는 Apple Silicon Mac의 iOS 시뮬레이터(Metal)에서 동작한다.)
+
 ```bash
-npm install --legacy-peer-deps   # react-native-webgpu의 optional peer 충돌 회피
-npx expo run:ios                 # dev client 빌드 (Dawn 컴파일로 첫 빌드는 오래 걸림)
+# 0) 의존성 설치 (react-native-webgpu의 optional peer 충돌 회피)
+npm install --legacy-peer-deps
+
+# 1) dev client 네이티브 빌드 — 최초 1회, 또는 네이티브 의존성/설정 변경 시에만
+#    (Dawn C++ 컴파일로 첫 빌드는 수 분 소요)
+npm run ios:build        # 안드로이드: npm run android:build
+
+# 2) 평소 개발 — Metro 시작 + 시뮬레이터 열기 + 터미널 QR 표시
+npm run ios              # 또는 npm start 후 터미널에서 i(iOS) / a(Android)
 ```
 
-> 네이티브 모듈(wgpu)을 쓰므로 Expo Go가 아닌 dev client가 필요하다.
-> WebGPU는 Apple Silicon Mac의 iOS 시뮬레이터(Metal)에서 동작한다.
+- `npm run ios` = `expo start --ios` : 시뮬레이터 실행 + QR + 단축키 메뉴
+- `npm run ios:build` = `expo run:ios` : 네이티브 빌드/재설치(QR 없음)
+- **실기기**: 폰에 dev client를 먼저 설치(`npm run ios:build -- --device` 또는 EAS dev 빌드)한 뒤,
+  QR을 스캔하면 `livingdiary://` 로 열린다. Expo Go로는 실행되지 않는다.
 
 ## 스크립트
 
