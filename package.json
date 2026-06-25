@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "expo start",
-    "ios": "expo start --ios",
-    "android": "expo start --android",
+    "start": "expo start --dev-client",
+    "ios": "expo start --dev-client --ios",
+    "android": "expo start --dev-client --android",
     "ios:build": "expo run:ios",
     "android:build": "expo run:android",
     "web": "expo start --web",
