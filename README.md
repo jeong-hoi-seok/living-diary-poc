@@ -23,22 +23,28 @@ Expo(React Native) 앱. 메인 화면에 Blender에서 만든 3D 태양계(`univ
 이 앱은 wgpu 네이티브 모듈을 쓰므로 **Expo Go가 아닌 dev client**가 필요하다.
 (WebGPU는 Apple Silicon Mac의 iOS 시뮬레이터(Metal)에서 동작한다.)
 
+스크립트는 두 그룹으로 나뉜다.
+
+**① 네이티브 빌드 (가끔 — 최초 1회, 또는 네이티브 의존성/설정 변경 시)**
+Dawn C++ 컴파일로 첫 빌드는 수 분 걸린다. dev client 앱을 시뮬/기기에 설치한다.
+
 ```bash
-# 0) 의존성 설치 (react-native-webgpu의 optional peer 충돌 회피)
-npm install --legacy-peer-deps
-
-# 1) dev client 네이티브 빌드 — 최초 1회, 또는 네이티브 의존성/설정 변경 시에만
-#    (Dawn C++ 컴파일로 첫 빌드는 수 분 소요)
-npm run ios:build        # 안드로이드: npm run android:build
-
-# 2) 평소 개발 — Metro 시작 + 시뮬레이터 열기 + 터미널 QR 표시
-npm run ios              # 또는 npm start 후 터미널에서 i(iOS) / a(Android)
+npm install --legacy-peer-deps   # react-native-webgpu의 optional peer 충돌 회피 (최초 1회)
+npm run build:ios                # iOS 시뮬레이터에 dev client 설치
+npm run build:ios:device         # 실기기에 설치 (Xcode 서명 설정 필요)
+npm run build:android            # 안드로이드
 ```
 
-- `npm run ios` = `expo start --ios` : 시뮬레이터 실행 + QR + 단축키 메뉴
-- `npm run ios:build` = `expo run:ios` : 네이티브 빌드/재설치(QR 없음)
-- **실기기**: 폰에 dev client를 먼저 설치(`npm run ios:build -- --device` 또는 EAS dev 빌드)한 뒤,
-  QR을 스캔하면 `livingdiary://` 로 열린다. Expo Go로는 실행되지 않는다.
+**② 개발 서버 (평소 — 매번)**
+Metro를 띄우고 이미 설치된 dev client를 연다. fast refresh로 코드 수정 즉시 반영.
+
+```bash
+npm run dev:ios      # 시뮬레이터에서 열기 (가장 흔함)
+npm run dev          # Metro만 시작 (QR + 단축키 메뉴, i=iOS / a=Android)
+```
+
+> **QR은 dev client용이다.** 이 앱은 네이티브 모듈(wgpu) 때문에 **Expo Go로 실행할 수 없으며,
+> Expo Go QR도 없다.** 실기기는 ①에서 dev client를 설치한 뒤 그 기기에서 QR/자동연결로 붙는다.
 
 ## 스크립트
 
