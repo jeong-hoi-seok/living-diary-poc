@@ -1,13 +1,20 @@
+import { useRouter } from "expo-router";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { SceneViewer } from "@/widgets/scene-viewer";
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   return (
     <View className="flex-1 bg-white">
-      {/* 3D 씬을 화면 전체로 채운다. */}
-      <SceneViewer />
+      {/* 3D 씬을 화면 전체로 채운다. 행성 탭 → 디테일(채팅) 페이지로 이동. */}
+      <SceneViewer
+        onSelectPlanet={(planetId) =>
+          router.push({ pathname: "/planet/[id]", params: { id: planetId } })
+        }
+      />
 
       {/*
         타이틀/설명은 화면 하단에 떠 있는 오버레이. pointerEvents="none"으로 두어

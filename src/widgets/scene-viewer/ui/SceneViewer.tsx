@@ -139,9 +139,21 @@ type OrbitState = {
  * 그 위에 (1) unive.glb 로드, (2) Blender EEVEE NPR 룩 재현용 머티리얼 교체,
  * (3) gesture-handler 기반 궤도 회전/줌, (4) AnimationMixer로 5트랙 공전 애니를 얹는다.
  */
-export function SceneViewer() {
+type SceneViewerProps = {
+  /** 행성 오브젝트를 탭했을 때 호출(planetId = "Planet1"~"Planet5"). */
+  onSelectPlanet?: (planetId: string) => void;
+};
+
+export function SceneViewer({ onSelectPlanet }: SceneViewerProps) {
   const canvasRef = useRef<CanvasRef>(null);
   const [isReady, setReady] = useState(false);
+
+  // 탭 raycast용 refs. animate 루프 바깥(제스처 콜백)에서 씬/카메라를 읽어야 한다.
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  // GestureDetector(=View) 논리 크기(points). NDC 변환에 픽셀버퍼가 아니라 이 값을 쓴다.
+  const layoutRef = useRef({ width: 0, height: 0 });
+  const raycasterRef = useRef(new THREE.Raycaster());
 
   // 궤도 상태(ref): 제스처/버튼이 갱신하고 animate 루프가 읽는다. 리렌더 불필요.
   const orbitRef = useRef<OrbitState>({
@@ -205,7 +217,47 @@ export function SceneViewer() {
       orbitRef.current.radius = clampRadius(next);
     });
 
-  const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture);
+  // 탭: 화면 좌표 → NDC → raycast → 맞은 오브젝트의 조상 중 Planet* 노드를 찾아 콜백.
+  const handleTap = useCallback(
+    (x: number, y: number) => {
+      const camera = cameraRef.current;
+      const scene = sceneRef.current;
+      const { width, height } = layoutRef.current;
+      if (!camera || !scene || width === 0 || height === 0) {
+        return;
+      }
+      const ndc = new THREE.Vector2((x / width) * 2 - 1, -(y / height) * 2 + 1);
+      const raycaster = raycasterRef.current;
+      raycaster.setFromCamera(ndc, camera);
+      const hits = raycaster.intersectObjects(scene.children, true);
+      for (const hit of hits) {
+        let obj: THREE.Object3D | null = hit.object;
+        while (obj) {
+          if (/^Planet\d+$/.test(obj.name)) {
+            onSelectPlanet?.(obj.name);
+            return;
+          }
+          obj = obj.parent;
+        }
+      }
+    },
+    [onSelectPlanet],
+  );
+
+  const tapGesture = Gesture.Tap()
+    .runOnJS(true)
+    .maxDistance(10)
+    .onEnd((event, success) => {
+      if (success) {
+        handleTap(event.x, event.y);
+      }
+    });
+
+  // 회전+줌은 동시 인식, 탭은 그와 경쟁(드래그면 pan이, 가만히 탭이면 tap이 이긴다).
+  const composedGesture = Gesture.Race(
+    Gesture.Simultaneous(panGesture, pinchGesture),
+    tapGesture,
+  );
 
   useEffect(() => {
     const context = canvasRef.current?.getContext("webgpu");
@@ -218,6 +270,7 @@ export function SceneViewer() {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(BACKGROUND_COLOR);
+    sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(
       CAMERA_FOV_DEG,
@@ -225,6 +278,7 @@ export function SceneViewer() {
       CAMERA_NEAR,
       CAMERA_FAR,
     );
+    cameraRef.current = camera;
 
     // 조명: KeyLight 방향광 + 약한 환경광. MeshToonMaterial이 이 빛으로 단계 명암을 만든다.
     const ambient = new THREE.AmbientLight(AMBIENT_COLOR, AMBIENT_INTENSITY);
@@ -324,7 +378,13 @@ export function SceneViewer() {
 
   return (
     <GestureDetector gesture={composedGesture}>
-      <View className="flex-1">
+      <View
+        className="flex-1"
+        onLayout={(e) => {
+          const { width, height } = e.nativeEvent.layout;
+          layoutRef.current = { width, height };
+        }}
+      >
         <Canvas ref={canvasRef} style={{ flex: 1 }} />
 
         {/* 로딩 인디케이터 오버레이(로드 완료 시 제거). */}
